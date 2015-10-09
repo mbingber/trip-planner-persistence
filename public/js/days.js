@@ -11,7 +11,16 @@ var daysModule = (function(){
       }],
       currentDay = days[0];
 
+  function postForDay(dayNum) {
+    $.post('/api/days/' + dayNum, function(data) {
+      console.log('added day' + dayNum);
+    }).fail(function(err) {
+      console.err('err', err);
+    })
+  }
+
   function addDay () {
+    postForDay(days.length + 1);
     days.push({
       hotels: [],
       restaurants: [],
@@ -82,6 +91,7 @@ var daysModule = (function(){
   }
 
   $(document).ready(function(){
+    postForDay(1);
     switchDay(0);
     $('.day-buttons').on('click', '.new-day-btn', addDay);
     $('.day-buttons').on('click', 'button:not(.new-day-btn)', function() {

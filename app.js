@@ -32,6 +32,7 @@ app.use(
 app.use(express.static(__dirname + '/public'));
 
 // serve routes
+app.use('/api/days', require('./routes/api/days.js'));
 app.use(require('./routes'));
 
 // catch 404 and forward to error handler
