@@ -12,7 +12,7 @@ app.set('view engine', 'html');
 app.engine('html', swig.renderFile);
 
 // log and body parse
-app.use(morgan('dev'));
+app.use(morgan('common'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 

@@ -11,11 +11,35 @@ var daysModule = (function(){
       }],
       currentDay = days[0];
 
+  function loadDays(data) {
+    console.dir(data);
+
+    data.forEach(function(day) {
+      if (day.hotel) day.hotel.type = 'hotels';
+      day.restaurants.forEach(function(rest) {
+        rest.type = 'restaurants';
+      });
+      day.activities.forEach(function(act) {
+        act.type = 'activities';
+      })
+      var dayObj = {};
+      dayObj.hotels = [];
+      if (day.hotel) dayObj.hotels = [day.hotel] ;
+      dayObj.restaurants = day.restaurants;
+      dayObj.activities = day.activities;
+      days[day.number-1] = dayObj;
+    })
+
+    console.dir(days);
+    postForDay(1);
+    switchDay(0);
+  }
+
   function postForDay(dayNum) {
     $.post('/api/days/' + dayNum, function(data) {
       console.log('added day' + dayNum);
     }).fail(function(err) {
-      console.err('err', err);
+      console.log('err', err);
     })
   }
 
@@ -42,6 +66,14 @@ var daysModule = (function(){
 
   function removeCurrentDay () {
     if (days.length === 1) return;
+    var dayNum = $('.current-day').text();
+    console.log('in removeCurrentDay');
+    $.post('/api/days/delete/' + dayNum, 
+      function(data) {
+        console.log('deleted day!');
+      }).fail(function(err) {
+        console.log('err', err);
+    });
     var index = days.indexOf(currentDay);
     days.splice(index, 1);
     switchDay(index);
@@ -62,13 +94,33 @@ var daysModule = (function(){
 
   exports.addAttraction = function(attraction) {
     if (currentDay[attraction.type].indexOf(attraction) !== -1) return;
-    currentDay[attraction.type].push(attraction);
+    if (attraction.type === 'hotels') currentDay[attraction.type][0] = attraction;
+      else currentDay[attraction.type].push(attraction);
+    console.log(attraction._id);
+    var dayNum = $('.current-day').text();
+    $.post('/api/days/' + dayNum + '/' + attraction.type, {id: attraction._id}, 
+      function(data) {
+        console.log('added attraction!');
+      }).fail(function(err) {
+      console.log('err', err);
+    });
     renderDay(currentDay);
   };
 
   exports.removeAttraction = function (attraction) {
+    console.dir(currentDay);
+    console.dir(attraction);
+
     var index = currentDay[attraction.type].indexOf(attraction);
+    console.log('index - ', index);
     if (index === -1) return;
+    var dayNum = $('.current-day').text();
+    $.post('/api/days/delete/' + dayNum + '/' + attraction.type, {id: attraction._id}, 
+      function(data) {
+        console.log('deleted attraction!');
+      }).fail(function(err) {
+      console.log('err', err);
+    });
     currentDay[attraction.type].splice(index, 1);
     renderDay(currentDay);
   };
@@ -81,7 +133,8 @@ var daysModule = (function(){
       $list.empty();
       day[type].forEach(function(attraction){
         $list.append(itineraryHTML(attraction));
-        mapModule.drawAttraction(attraction);
+        var toLog = mapModule.drawAttraction(attraction);
+        console.log(toLog);
       });
     });
   }
@@ -91,8 +144,11 @@ var daysModule = (function(){
   }
 
   $(document).ready(function(){
-    postForDay(1);
-    switchDay(0);
+    $.get('/api/days/', loadDays)
+    .fail(function(err) {
+      console.log('err', err);
+    });
+    
     $('.day-buttons').on('click', '.new-day-btn', addDay);
     $('.day-buttons').on('click', 'button:not(.new-day-btn)', function() {
       switchDay($(this).index());
