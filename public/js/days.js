@@ -110,8 +110,12 @@ var daysModule = (function(){
   exports.removeAttraction = function (attraction) {
     console.dir(currentDay);
     console.dir(attraction);
-
-    var index = currentDay[attraction.type].indexOf(attraction);
+    console.log(attraction.type)
+    var id = attraction._id;
+    var index = -1;
+    currentDay[attraction.type].forEach(function(attraction, i) {
+      if (attraction._id === id) index = i;
+    });
     console.log('index - ', index);
     if (index === -1) return;
     var dayNum = $('.current-day').text();
